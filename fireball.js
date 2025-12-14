@@ -1,146 +1,158 @@
-// <![CDATA[
-var bits=80; // how many bits
-var speed=33; // how fast - smaller is faster
-var bangs=5; // how many can be launched simultaneously (note that using too many can slow the script down)
-var colours=new Array("#03f", "#f03", "#0e0", "#93f", "#0cf", "#f93", "#f0c"); 
-//                     blue    red     green   purple  cyan    orange  pink
+(() => {
+  "use strict";
 
-/****************************
-*      Fireworks Effect     *
-*(c)2004-11 mf2fm web-design*
-*  http://www.mf2fm.com/rv  *
-* DON'T EDIT BELOW THIS BOX *
-****************************/
-var bangheight=new Array();
-var intensity=new Array();
-var colour=new Array();
-var Xpos=new Array();
-var Ypos=new Array();
-var dX=new Array();
-var dY=new Array();
-var stars=new Array();
-var decay=new Array();
-var swide=800;
-var shigh=600;
-var boddie;
+  const bits = 80;
+  const speed = 33;
+  const bangs = 5;
+  const colours = ["#03f", "#f03", "#0e0", "#93f", "#0cf", "#f93", "#f0c"];
 
-window.onload=function() { if (document.getElementById) {
-  var i;
-  boddie=document.createElement("div");
-  boddie.style.position="fixed";
-  boddie.style.top="0px";
-  boddie.style.left="px";
-  boddie.style.overflow="visible";
-  boddie.style.width="1px";
-  boddie.style.height="1px";
-  boddie.style.backgroundColor="transparent";
-  document.body.appendChild(boddie);
-  set_width();
-  for (i=0; i<bangs; i++) {
-    write_fire(i);
-    launch(i);
-    setInterval('stepthrough('+i+')', speed);
+  const bangheight = [];
+  const intensity = [];
+  const colour = [];
+  const Xpos = [];
+  const Ypos = [];
+  const dX = [];
+  const dY = [];
+  const stars = [];
+  const decay = [];
+
+  let swide = window.innerWidth || 800;
+  let shigh = window.innerHeight || 600;
+  let boddie;
+
+  function setDimensions() {
+    swide = Math.max(
+      document.documentElement?.clientWidth || 0,
+      window.innerWidth || 0,
+      document.body?.clientWidth || 0,
+      800
+    );
+    shigh = Math.max(
+      document.documentElement?.clientHeight || 0,
+      window.innerHeight || 0,
+      document.body?.clientHeight || 0,
+      600
+    );
   }
-}}
 
-function write_fire(N) {
-  var i, rlef, rdow;
-  stars[N+'r']=createDiv('|', 12);
-  boddie.appendChild(stars[N+'r']);
-  for (i=bits*N; i<bits+bits*N; i++) {
-    stars[i]=createDiv('*', 13);
-    boddie.appendChild(stars[i]);
+  function createDiv(char, size) {
+    const div = document.createElement("div");
+    div.style.position = "absolute";
+    div.style.font = `${size}px monospace`;
+    div.style.backgroundColor = "transparent";
+    div.appendChild(document.createTextNode(char));
+    return div;
   }
-}
 
-function createDiv(char, size) {
-  var div=document.createElement("div");
-  div.style.font=size+"px monospace";
-  div.style.position="absolute";
-  div.style.backgroundColor="transparent";
-  div.appendChild(document.createTextNode(char));
-  return (div);
-}
+  function writeFire(n) {
+    stars[`${n}r`] = createDiv("|", 12);
+    boddie.appendChild(stars[`${n}r`]);
 
-function launch(N) {
-  colour[N]=Math.floor(Math.random()*colours.length);
-  Xpos[N+"r"]=swide*0.5;
-  Ypos[N+"r"]=shigh-5;
-  bangheight[N]=Math.round((0.5+Math.random())*shigh*0.4);
-  dX[N+"r"]=(Math.random()-0.5)*swide/bangheight[N];
-  if (dX[N+"r"]>1.25) stars[N+"r"].firstChild.nodeValue="/";
-  else if (dX[N+"r"]<-1.25) stars[N+"r"].firstChild.nodeValue="\\";
-  else stars[N+"r"].firstChild.nodeValue="|";
-  stars[N+"r"].style.color=colours[colour[N]];
-}
-
-function bang(N) {
-  var i, Z, A=0;
-  for (i=bits*N; i<bits+bits*N; i++) { 
-    Z=stars[i].style;
-    Z.left=Xpos[i]+"px";
-    Z.top=Ypos[i]+"px";
-    if (decay[i]) decay[i]--;
-    else A++;
-    if (decay[i]==15) Z.fontSize="7px";
-    else if (decay[i]==7) Z.fontSize="2px";
-    else if (decay[i]==1) Z.visibility="hidden";
-    Xpos[i]+=dX[i];
-    Ypos[i]+=(dY[i]+=1.25/intensity[N]);
-  }
-  if (A!=bits) setTimeout("bang("+N+")", speed);
-}
-
-function stepthrough(N) { 
-  var i, M, Z;
-  var oldx=Xpos[N+"r"];
-  var oldy=Ypos[N+"r"];
-  Xpos[N+"r"]+=dX[N+"r"];
-  Ypos[N+"r"]-=4;
-  if (Ypos[N+"r"]<bangheight[N]) {
-    M=Math.floor(Math.random()*3*colours.length);
-    intensity[N]=5+Math.random()*4;
-    for (i=N*bits; i<bits+bits*N; i++) {
-      Xpos[i]=Xpos[N+"r"];
-      Ypos[i]=Ypos[N+"r"];
-      dY[i]=(Math.random()-0.5)*intensity[N];
-      dX[i]=(Math.random()-0.5)*(intensity[N]-Math.abs(dY[i]))*1.25;
-      decay[i]=16+Math.floor(Math.random()*16);
-      Z=stars[i];
-      if (M<colours.length) Z.style.color=colours[i%2?colour[N]:M];
-      else if (M<2*colours.length) Z.style.color=colours[colour[N]];
-      else Z.style.color=colours[i%colours.length];
-      Z.style.fontSize="13px";
-      Z.style.visibility="visible";
+    for (let i = bits * n; i < bits + bits * n; i++) {
+      stars[i] = createDiv("*", 13);
+      boddie.appendChild(stars[i]);
     }
-    bang(N);
-    launch(N);
   }
-  stars[N+"r"].style.left=oldx+"px";
-  stars[N+"r"].style.top=oldy+"px";
-} 
 
-window.onresize=set_width;
-function set_width() {
-  var sw_min=999999;
-  var sh_min=999999;
-  if (document.documentElement && document.documentElement.clientWidth) {
-    if (document.documentElement.clientWidth>0) sw_min=document.documentElement.clientWidth;
-    if (document.documentElement.clientHeight>0) sh_min=document.documentElement.clientHeight;
+  function launch(n) {
+    colour[n] = Math.floor(Math.random() * colours.length);
+    Xpos[`${n}r`] = swide * 0.5;
+    Ypos[`${n}r`] = shigh - 5;
+
+    bangheight[n] = Math.round((0.5 + Math.random()) * shigh * 0.4);
+    dX[`${n}r`] = (Math.random() - 0.5) * swide / bangheight[n];
+
+    const ch =
+      dX[`${n}r`] > 1.25 ? "/" :
+      dX[`${n}r`] < -1.25 ? "\\" : "|";
+
+    stars[`${n}r`].firstChild.nodeValue = ch;
+    stars[`${n}r`].style.color = colours[colour[n]];
   }
-  if (typeof(self.innerWidth)!="undefined" && self.innerWidth) {
-    if (self.innerWidth>0 && self.innerWidth<sw_min) sw_min=self.innerWidth;
-    if (self.innerHeight>0 && self.innerHeight<sh_min) sh_min=self.innerHeight;
+
+  function bang(n) {
+    let alive = 0;
+
+    for (let i = bits * n; i < bits + bits * n; i++) {
+      const z = stars[i].style;
+      z.left = `${Xpos[i]}px`;
+      z.top = `${Ypos[i]}px`;
+
+      if (decay[i]) decay[i]--;
+      else alive++;
+
+      if (decay[i] === 15) z.fontSize = "7px";
+      else if (decay[i] === 7) z.fontSize = "2px";
+      else if (decay[i] === 1) z.visibility = "hidden";
+
+      Xpos[i] += dX[i];
+      Ypos[i] += (dY[i] += 1.25 / intensity[n]);
+    }
+
+    if (alive !== bits) {
+      setTimeout(() => bang(n), speed);
+    }
   }
-  if (document.body.clientWidth) {
-    if (document.body.clientWidth>0 && document.body.clientWidth<sw_min) sw_min=document.body.clientWidth;
-    if (document.body.clientHeight>0 && document.body.clientHeight<sh_min) sh_min=document.body.clientHeight;
+
+  function stepthrough(n) {
+    const oldx = Xpos[`${n}r`];
+    const oldy = Ypos[`${n}r`];
+
+    Xpos[`${n}r`] += dX[`${n}r`];
+    Ypos[`${n}r`] -= 4;
+
+    if (Ypos[`${n}r`] < bangheight[n]) {
+      const m = Math.floor(Math.random() * 3 * colours.length);
+      intensity[n] = 5 + Math.random() * 4;
+
+      for (let i = bits * n; i < bits + bits * n; i++) {
+        Xpos[i] = Xpos[`${n}r`];
+        Ypos[i] = Ypos[`${n}r`];
+        dY[i] = (Math.random() - 0.5) * intensity[n];
+        dX[i] = (Math.random() - 0.5) * (intensity[n] - Math.abs(dY[i])) * 1.25;
+        decay[i] = 16 + Math.floor(Math.random() * 16);
+
+        const z = stars[i];
+        z.style.color =
+          m < colours.length
+            ? colours[i % 2 ? colour[n] : m]
+            : m < 2 * colours.length
+            ? colours[colour[n]]
+            : colours[i % colours.length];
+
+        z.style.fontSize = "13px";
+        z.style.visibility = "visible";
+      }
+
+      bang(n);
+      launch(n);
+    }
+
+    stars[`${n}r`].style.left = `${oldx}px`;
+    stars[`${n}r`].style.top = `${oldy}px`;
   }
-  if (sw_min==999999 || sh_min==999999) {
-    sw_min=800;
-    sh_min=600;
-  }
-  swide=sw_min;
-  shigh=sh_min;
-}
-// ]]>
+
+  window.addEventListener("resize", setDimensions);
+
+  window.addEventListener("load", () => {
+    boddie = document.createElement("div");
+    boddie.style.position = "fixed";
+    boddie.style.top = "0";
+    boddie.style.left = "0";
+    boddie.style.width = "1px";
+    boddie.style.height = "1px";
+    boddie.style.overflow = "visible";
+    boddie.style.backgroundColor = "transparent";
+
+    document.body.appendChild(boddie);
+
+    setDimensions();
+
+    for (let i = 0; i < bangs; i++) {
+      writeFire(i);
+      launch(i);
+      setInterval(() => stepthrough(i), speed);
+    }
+  });
+
+})();
